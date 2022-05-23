@@ -194,7 +194,7 @@ public class ArbolGeneral <E> implements Tree <E> {
 		
 		boolean perteneceAlArbol = this.perteneceAlArbol(ancester);
 		
-		
+		//Verifica si el nodo creado a partir de p pertenece al arbol
 		if (!perteneceAlArbol) {
 			throw new InvalidPositionException("p no pertenece al árbol");
 		} else {
