@@ -1,3 +1,4 @@
+
 //Funciona
 import java.util.Iterator;
 
@@ -6,7 +7,6 @@ import Auxiliar.EmptyListException;
 import Auxiliar.EmptyTreeException;
 import Auxiliar.InvalidOperationException;
 import Auxiliar.InvalidPositionException;
-import TDALista.ListaDobleEnlazada;
 import TDALista.ListaDoblementeEnlazada;
 import TDALista.Position;
 import TDALista.PositionList;
@@ -29,7 +29,7 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 * @return Cantidad de nodos en el árbol.
 	 */
 	public int size() {
-		return tamaño;
+		return this.tamaño;
 	}
 	
 	/**
@@ -37,7 +37,7 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 * @return Verdadero si el árbol está vacío, falso en caso contrario.
 	 */
 	public boolean isEmpty() {
-		return tamaño == 0;
+		return this.tamaño == 0;
 	}
 	
 	/**
@@ -45,9 +45,9 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 * @return Iterador de los elementos almacenados en el árbol.
 	 */
 	public Iterator<E> iterator() {
-		PositionList<E> list = new ListaDobleEnlazada<E>();
-		for ( Position<E> pos: this.positions() ) {
-			list.addLast(pos.element());
+		PositionList<E> list = new ListaDoblementeEnlazada<E>();
+		if( !this.isEmpty() ) {
+			this.recPreordenPorElementos(raiz, list);
 		}
 		return list.iterator();
 	}
@@ -57,9 +57,9 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 * @return Colección iterable de las posiciones de los nodos del árbol.
 	 */
 	public Iterable<Position<E>> positions() {
-		PositionList<Position<E>> list = new ListaDobleEnlazada<Position<E>>();
+		PositionList<Position<E>> list = new ListaDoblementeEnlazada<Position<E>>();
 		if( !this.isEmpty() ) {
-			pre(raiz, list);
+			this.recPreorden(raiz, list);
 		}
 		return list;
 	}
@@ -86,7 +86,6 @@ public class ArbolGeneral <E> implements Tree <E> {
 			nodo.setElement(e);
 			return elementToReturn;
 		}
-		
 	}
 	
 	/**
@@ -285,7 +284,6 @@ public class ArbolGeneral <E> implements Tree <E> {
 				return nuevo;
 			}
 		}
-		
 	}
 	
 	/**
@@ -332,7 +330,6 @@ public class ArbolGeneral <E> implements Tree <E> {
 				return nuevo;
 			}
 		}
-		
 	}
 
 	/**
@@ -471,30 +468,30 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 */
 	public void removeNode (Position<E> p) throws InvalidPositionException {
 		TNodo<E> nodo = this.checkPosition(p);
-		
+		// Si no hay raiz, lanza una excepción.
 		if( this.raiz == null ) {
 			throw new InvalidPositionException("Arbol vacio");
 		}
-		
+		//Si el nodo a eliminar es la raiz, ...
 		if( this.raiz == nodo ) {
-			
+			//... entonces si la raiz no tiene hijos, ...
 			if( this.raiz.getHijos().isEmpty()) {
-				this.raiz = null;
-	
-			} else if( this.raiz.getHijos().size() == 1) {
+				//... entonces borro la raiz
+				this.raiz = null; 
+			} else if( this.raiz.getHijos().size() == 1) {// ... de lo contrario, si la raiz tiene un hijo, ...
+				//... entonces hacer que el hijo pase a ser la raiz del arbol
 				try {
 					TNodo<E> nuevaRaiz = this.raiz.getHijos().remove(this.raiz.getHijos().first());
 					nuevaRaiz.setPadre(null);
 					this.raiz = nuevaRaiz;
-				} catch (EmptyListException e) {
-					System.out.println("Algo malo paso");
-				}
+				} catch (EmptyListException e) {System.out.println("Algo malo paso");}
 				
 			} else {
+				//... de lo contrario, lanza una excepcion
 				throw new InvalidPositionException("La raiz no tiene un unico descendiente");
 			}
 		} else {
-			
+			//... de lo contrario
 			TNodo<E> ancester = nodo.getPadre();
 			PositionList<TNodo<E>> listDescentansOfAncester = ancester.getHijos();
 			Position<TNodo<E>> posOfNodo;
@@ -555,54 +552,35 @@ public class ArbolGeneral <E> implements Tree <E> {
 	 */
 	private TNodo<E> checkPosition(Position<E> v) throws InvalidPositionException {
 		if( v == null ) {
-			throw new InvalidPositionException("Posicion invalida");
+			throw new InvalidPositionException("Posicion invalida (1)");
 		} else {
 			try {
 				TNodo<E> tNodo = (TNodo<E>) v;
 				return tNodo;
 			} catch (ClassCastException e) {
-				throw new InvalidPositionException("Posicion invalida");
+				throw new InvalidPositionException("Posicion invalida (2)");
 			}
 			
 		}
 	}
 	
-	private void pre( TNodo<E> v, PositionList<Position<E>> list) {
+	/**
+	 * Realiza un recorrido de pre-orden y agrega la posicion de cada elemento del arbol en una lista.
+	 * @param v Nodo desde que se comienza a recorrer.
+	 * @param list
+	 */
+	private void recPreorden( TNodo<E> v, PositionList<Position<E>> list) {
 		list.addLast(v);
 		for( TNodo<E> h : v.getHijos() ) {
-			pre( h, list );
+			recPreorden( h, list );
 		}
 	}
-
-	public void insertarHijoAltura(int alt, E rotulo) {
-
-		for (Position<E> pos : positions())
-			if (altura(pos) == alt) {
-				try {
-					addLastChild(pos, rotulo);
-				} catch (InvalidPositionException e) {
-					e.printStackTrace();
-				}
-
-			}
-
-	}
-
-	private int altura(Position<E> v) {
-		int salida = 0;
-		try {
-			if (isExternal(v))
-				salida = 0;
-			else {
-				int h = 0;
-				for (Position<E> w : children(v))
-					h = Math.max(h, altura(w));
-				salida = 1 + h;
-			}
-		} catch (InvalidPositionException e) {
-			e.printStackTrace();
+	
+	private void recPreordenPorElementos( TNodo<E> v, PositionList<E> list) {
+		list.addLast(v.element());
+		for( TNodo<E> h : v.getHijos() ) {
+			recPreordenPorElementos( h, list);
 		}
-		return salida;
 	}
 	
 	/**
@@ -616,20 +594,7 @@ public class ArbolGeneral <E> implements Tree <E> {
 		if( this.raiz == null) {
 			pertenece = false;
 		} else {
-//			Iterable<Position<E>> positions = this.positions();
-//			Iterator<Position<E>> it = positions.iterator();
-//			Position<E> posActual = it.hasNext() ? it.next() : null;
-//			TNodo<E> nodoActual = null;
-//			while( posActual != null && !pertenece) {
-//				try {
-//					nodoActual = this.checkPosition(posActual);
-//				} catch (InvalidPositionException e) {}
-//				if( nodoActual.equals(p)) {
-//					pertenece = true;
-//				} else {
-//					posActual = it.hasNext() ? it.next() : null;
-//				}
-//			}
+			
 			Iterator<E> it = this.iterator();
 			E elementActual = it.hasNext() ? it.next() : null;
 			
@@ -645,3 +610,4 @@ public class ArbolGeneral <E> implements Tree <E> {
 		return pertenece;
 	}
 }
+
